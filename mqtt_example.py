@@ -6,6 +6,8 @@ import paho.mqtt.publish as publish
 
 import connection
 
+from threading import Thread
+
 dist_idx = (0, 4)
 gps_idx = (772, 773)
 mock_t = [float(i) for i in range(775)]
@@ -61,6 +63,11 @@ client.connect("test.mosquitto.org", 1883, 60)
 
 client.loop_start()
 
+# init env
+
+test_turns = iter([0, 1, 2, 3, 0, 1, 2, 3, 4])
+
+
 # Timeout after 15 mins
 t_end = time.time() + 60 * 15
 while time.time() < t_end:
@@ -74,10 +81,14 @@ while time.time() < t_end:
         tock = time.time()
         print(f">Process Time: {tock - tick}\n> {d_array}\n({lat}, {long})")
 
-        # Pass Info to Data Pipeline
+        # Pass Info to Data Pipeline, return the pipeline object
+        # get_next_turn_thread = Thread(target=env.step(prev_turn))
+
+        # Pass pipeline object to environment and take a step
+        # environment.step
 
         # Recieve Next Turn
-        mock_turn = -1
+        mock_turn = next(test_turns)
 
         # Transmit Next Turn
         print("Transmitting Next Turn to RC car...")
