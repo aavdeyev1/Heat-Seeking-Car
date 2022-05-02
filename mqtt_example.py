@@ -1,6 +1,7 @@
 """MQTT Tx/Rx tranmission example"""
 import paho.mqtt.client as mqtt
 import time
+import sys
 
 import paho.mqtt.publish as publish
 
@@ -9,7 +10,7 @@ import connection
 from threading import Thread
 
 dist_idx = (0, 4)
-gps_idx = (772, 773)
+gps_idx = (773, 774)
 mock_t = [float(i) for i in range(775)]
 mock_arr = str(mock_t)
 DATA_BUFFER = connection.Buffer(dist_idx, gps_idx)
@@ -66,6 +67,8 @@ client.loop_start()
 # init env
 
 test_turns = iter([0, 1, 2, 3, 0, 1, 2, 3, 4])
+file_path = 'observation_data.txt'
+sys.stdout = open(file_path, "a")
 
 
 # Timeout after 15 mins
@@ -79,7 +82,7 @@ while time.time() < t_end:
         tick = time.time()
         t_array, d_array, lat, long = DATA_BUFFER.buffer_to_arrays()
         tock = time.time()
-        print(f">Process Time: {tock - tick}\n> {d_array}\n({lat}, {long})")
+        print(f"\n>Process Time: {tock - tick}\n> {d_array}\n({lat}, {long})")
 
         # Pass Info to Data Pipeline, return the pipeline object
         # get_next_turn_thread = Thread(target=env.step(prev_turn))
