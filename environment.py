@@ -120,15 +120,10 @@ class RCCarEnv(py_environment.PyEnvironment):
       new_observation_vector[0:4, 0, 0] = [i for i in new_pipeline.d_array]
       new_observation_vector[4, 0, 0] = new_pipeline.t_percent
       new_observation_vector[5] = new_pipeline.t_array
-      # new_observation_vector = np.append(new_pipeline.d_array, new_pipeline.t_percent)
       self._observation = new_observation_vector
-      print(self._observation)
       
     else:
       raise ValueError('`action` should be 0 to 3.')
-
-    # TODO: Remove
-    print(self._observation)
 
     if self._episode_ended or self._observation[4, 0, 0] > .85:
       # reward = self._pls[self._pl_idx].get_reward(self._observation_spec)
