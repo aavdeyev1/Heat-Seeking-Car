@@ -2,6 +2,7 @@
 import numpy as np
 import helper_funcs as hf
 import math
+import enum
 
 t_perc_rate = .75
 min_reward = -100
@@ -10,32 +11,27 @@ min_t_percent = .1
 max_t_percent = .85
 min_d = 20
 
+dir_names = ["fwd", "right", "bwd", "lft"]
+opposite_enum = {"fwd": 2,
+                 "right": 3,
+                 "bwd": 0,
+                 "lft": 1}
+
 class Pipeline():
     """Pipeline object for processing data from RC car."""
     def __init__(self, t_array, d_array, width=32, height=24, prev_t_percent=0, prev_d_score=0):
-        # self.message = np.array(message)
         self.img_width = width
         self.img_height = height
         self.t_array = t_array
         self.d_array = d_array
         self.gps_lat = None
         self.gps_long = None
-        # self.translate()
         self.t_percent = self.get_t_percent()
         self.d_score = self.get_d_score()
         self.reward = self.get_reward(prev_t_percent, prev_d_score)
 
     def __str__(self):
         return f"Pipeline: \n> distance:{self.d_array}, thermal size: {self.t_array.shape}\n"
-
-    # def translate(self):
-    #     """Translate input array into attributes of pipeline:
-    #         Thermal array, distance array, latitude, longitude
-    #     """
-    #     self.d_array = np.array(self.message[0:4], dtype=np.float16)
-    #     self.t_array = np.array(self.message[5:773].reshape((32, 24)), dtype=np.float32)
-    #     self.gps_lat = self.message[773]
-    #     self.gps_long = self.message[774]
 
     def get_t_percent(self):
         t_max = np.amax(self.t_array)
@@ -86,6 +82,21 @@ class Pipeline():
                 reward = min_reward
 
         return reward
+    
+    def check_if_fatal(self, next_action):
+        """Change action to move out of way of obstacle if dangerously close."""
+        if np.amin(self.d_array) <= min_d:
+            too_close_dir = np.argmin(self.d_array)
+            # Dangerously close, reroute manually to dir opposite the closest
+            opposite_dir = opposite_enum[dir_names[too_close_dir]]
+            if self.d_array[opposite_dir] > 2 * min_d:
+                # ok to reroute through opposite dir
+                next_action = opposite_dir
+            else:
+                # Opposite dir not enough room, reroute through dir with greatest headroom
+                next_action = np.argmax(self.d_array)
+        
+        return next_action
 
 if __name__ == "__main__":
 
@@ -104,13 +115,17 @@ if __name__ == "__main__":
     prev_d_score = .091 # 3 directions
     
 
-    d_array = np.array( [100, 100, 19, 19])
+    d_array = np.array( [101, 100, 19, 19])
     t_array = np.array([[27.0, 27.0, 31.0, 31.0],
                         [27.0, 27.0, 32.0, 32.0],
                         [27.0, 27.0, 32.0, 32.0],
                         [27.0, 27.0, 31.0, 31.0]])
 
     mock_pl = Pipeline(t_array, d_array, mock_width, mock_height, prev_t_percent, prev_d_score)
+
+    # Test check_if_fatal function
+    dec = mock_pl.check_if_fatal(2)
+    print(dec)
 
     test_percent = mock_pl.get_t_percent()
     test_score = mock_pl.get_d_score()
