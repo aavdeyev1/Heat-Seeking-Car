@@ -3,9 +3,9 @@ import paho.mqtt.client as mqtt
 import time
 import tensorflow as tf
 import numpy as np
-
 import paho.mqtt.publish as publish
 import buffer
+from errors import SaveAndExitError
 
 timeout_mins = 1
 dist_idx = (0, 4)
@@ -55,14 +55,6 @@ class Connector():
         print("Sending connection request...")
         publish.single(request_path, "1", hostname=host_name)
 
-    def check_timeout(self):
-        if time.time() > self.t_end:
-            self.client.loop_stop()
-            return True
-            # raise Exception("Time Elapsed.")
-        else:
-            return False
-
     def check_for_data(self):
         publish.single(request_path, "1", hostname=host_name)
         print(self.data_buffer.msg_flag)
@@ -75,7 +67,7 @@ class Connector():
             print(f"\n>Process Time: {tock - tick}\n> {d_array}\n({lat}, {long})")
             print(self.data_buffer.msg)
 
-            # t_array, d_array = self.preprocess_data(t_array, d_array)
+            t_array, d_array = self.preprocess_data(t_array, d_array)
             
             return t_array, d_array, lat, long
 
@@ -90,7 +82,7 @@ class Connector():
         avg_pool_2d = tf.keras.layers.AveragePooling2D(pool_size=(2, 2),
                 strides=(2, 2), padding='valid')
         pre_t_array = avg_pool_2d(pre_t_array)
-        pre_t_array = tf.reshape(pre_t_array, (24/2, 32/2))
+        pre_t_array = tf.reshape(pre_t_array, (12, 16))
 
         # Round all values of t_array
         tf.round(pre_t_array)
@@ -100,11 +92,19 @@ class Connector():
         
         return pre_t_array, d_array
             
-    def send_turn(self, action):
+    def send_turn(self, action: str):
+        # If first attempt to send turn cause error, try again. else raise SaveAndExitError.
         # Transmit Next Turn
         print("Transmitting Next Turn to RC car...")
-        publish.single(turn_direction_path, action, hostname=host_name)
-        self.data_buffer.msg_flag = False
+        try:
+            publish.single(turn_direction_path, int(action), hostname=host_name)
+        except TypeError:
+            try:
+                publish.single(turn_direction_path, int(action), hostname=host_name)
+            except TypeError:
+                raise SaveAndExitError("Error In Transmitting Next Turn... Saving and Exiting...")
+        finally:
+            self.data_buffer.msg_flag = False
 
 
 if __name__ == "__main__":
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     # file_path = 'observation_data.txt'
     # sys.stdout = open(file_path, "a")
     conn = Connector()
-    while conn.check_timout() is not True:
+    while 1:
         t_array, d_array, lat, long = conn.check_for_data()
         if lat != -1:
-            conn.send_turn()
+            conn.send_turn(next(test_turns))
