@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 T_m = 4
 T_n = 4
 
+action_names = ["Forward", "Right", "Backward", "Left"]
+
 def copy_border(arr: np.array):
     arr_temp = np.ones((T_m + 2, T_n + 2))
     for row in range(T_m):
@@ -84,3 +86,7 @@ def plot_value_array(i, predictions_array, true_label):
 
   thisplot[predicted_label].set_color('red')
   thisplot[true_label].set_color('blue')
+
+def send_action(action):
+  """Send action to rc car."""
+  print(f"Send action to car: Go {action_names[action]}")
