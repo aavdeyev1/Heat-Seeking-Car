@@ -2,4 +2,3 @@
 
 class SaveAndExitError(Exception):
     """Raise When an Error occured during processing and qtable must be saved."""
-    pass
