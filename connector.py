@@ -17,6 +17,7 @@ host_name = "test.mosquitto.org"
 request_path = "HeatSeekingCar/Request"
 observation_data_path = "HeatSeekingCar/Observation_Vector"
 turn_direction_path = "HeatSeekingCar/Direction"
+undervoltage_path = "HeatSeekingCar/Undervoltage"
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
@@ -25,6 +26,7 @@ def on_connect(client, userdata, flags, rc):
     # Subscribing in on_connect() - if we lose the connection and
     # reconnect then subscriptions will be renewed.
     client.subscribe(observation_data_path)
+    client.subscribe(undervoltage_path)
  
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
@@ -33,6 +35,10 @@ def on_message(client, userdata, msg):
     if msg.topic == observation_data_path:
         DATA_BUFFER.msg = msg.payload
         DATA_BUFFER.msg_flag = True
+
+    if msg.topic == undervoltage_path:
+        if b'1' in msg.payload:
+            DATA_BUFFER.undervoltage_flag = True
 
 
 class Connector():
@@ -57,7 +63,7 @@ class Connector():
 
     def check_for_data(self):
         publish.single(request_path, "1", hostname=host_name)
-        print(self.data_buffer.msg_flag)
+
         if self.data_buffer.msg_flag: # If buffer not empty, send it to data pipeline
             print("Message Recieved\nConverting Buffer to Arrays...")
             # Translate from raw data to buffer
@@ -65,12 +71,16 @@ class Connector():
             t_array, d_array, lat, long = DATA_BUFFER.buffer_to_arrays()
             tock = time.time()
             print(f"\n>Process Time: {tock - tick}\n> {d_array}\n({lat}, {long})")
+            # TODO rm this print
             print(self.data_buffer.msg)
 
             t_array, d_array = self.preprocess_data(t_array, d_array)
-            
-            return t_array, d_array, lat, long
 
+            if self.data_buffer.undervoltage_flag:
+                print(f"WARNING! Battery is near empty... Stopping at [{lat}, {long}]")
+                raise SaveAndExitError
+
+            return t_array, d_array, lat, long
         else:
             return mock_arr, mock_arr, None, None
 

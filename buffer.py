@@ -16,6 +16,7 @@ class Buffer():
         self.gps_idx = gps_idx
         self.thermal = ""
         self.distance = ""
+        self.undervoltage_flag = False
 
     def __str__(self):
         return f"Thermal: {self.msg}, Dist: {self.distance}"
