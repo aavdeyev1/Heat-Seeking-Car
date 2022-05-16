@@ -33,7 +33,7 @@ class RCCarEnv(py_environment.PyEnvironment):
     def __init__(self):
         self._action_spec = array_spec.BoundedArraySpec(
             shape=(), dtype=np.int32, minimum=0, maximum=3, name='action')
-        
+
         # [N, E, S, W, %] distances, current % of thermal view
         self._observation_spec = array_spec.BoundedArraySpec(
             shape=(6,t_dim[0],t_dim[1]), dtype=np.int32, minimum=0, maximum=500, name='observation')
@@ -51,8 +51,13 @@ class RCCarEnv(py_environment.PyEnvironment):
 
         self.conn = Connector()
 
+    @property
+    def observation_space_size(self):
+        return self._observation_space_size
+
+    @property
     def action_spec(self):
-        return self._action_spec
+        return self._action_spec.maximum
 
     def observation_spec(self):
         return self._observation_spec
@@ -71,7 +76,7 @@ class RCCarEnv(py_environment.PyEnvironment):
             # The last action ended the episode. Ignore the current action and start
             # a new episode.
             return self.reset()
-        
+
         # Make sure episodes don't go on forever.
         if self._observation[4, 0, 0] > stop_percent:
             # End episode if target found, or T% is > stop precent
@@ -89,7 +94,7 @@ class RCCarEnv(py_environment.PyEnvironment):
 
             # # busy wait til next Buffer comes in
             while lat is None:
-                t_array, d_array, lat, _ = self.conn.check_for_data()
+                t_array, d_array, lat, long = self.conn.check_for_data()
                 time.sleep(1)   
         else:
             raise ValueError('`action` should be 0 to 3.')
@@ -98,6 +103,8 @@ class RCCarEnv(py_environment.PyEnvironment):
         if self._pl_hist.current_pl.get_t_percent(t_array) > stop_percent:
             # End episode if target found, or T% is > stop precent
             print("Target Found, ending episode...")
+            final_step = 4  # stop command
+            self.conn.send_turn(final_step)
             # Send Stop command to car
             self._episode_ended = True
 
@@ -108,20 +115,19 @@ class RCCarEnv(py_environment.PyEnvironment):
             next_action = self._pl_hist.current_pl.check_if_fatal(next_action)
             # Valid action returned guaranteed, carry out next turn
             self.conn.send_turn(next_action)
-            mock_t = t_array
-            mock_d = d_array
 
-            print(mock_t)
-            print(mock_d)
+            print(t_array)
+            print(d_array)
+            print(f"Location: lat={lat}, long={long}")
 
             # TODO - remove;
             # Convert to usable arrays NUMPY arrs
-            # mock_t = np.array([float(i) for i in range(t_dim[0]*t_dim[1])],
+            # t_array = np.array([float(i) for i in range(t_dim[0]*t_dim[1])],
             #                   dtype=np.int32).reshape(t_dim)
-            # mock_d = np.array([100, 100, 25, 25], dtype=np.int32)
+            # d_array = np.array([100, 100, 25, 25], dtype=np.int32)
 
             # Generate pipeline for next step
-            new_pipeline = Pipeline(mock_t, mock_d, prev_t_percent=self._observation[4, 0, 0],
+            new_pipeline = Pipeline(t_array, d_array, prev_t_percent=self._observation[4, 0, 0],
             prev_d_score=prev_d_score, width=t_dim[1], height=t_dim[0])
 
             # TODO - remove
