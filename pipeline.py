@@ -4,7 +4,7 @@ import helper_funcs as hf
 import math
 import enum
 
-t_perc_rate = .75
+t_perc_rate = .50
 min_reward = -100
 max_reward = 100
 min_t_percent = .1
@@ -33,17 +33,18 @@ class Pipeline():
     def __str__(self):
         return f"Pipeline: \n> distance:{self.d_array}, thermal size: {self.t_array.shape}\n"
 
-    def get_t_percent(self):
-        t_max = np.amax(self.t_array)
-        t_min = np.amin(self.t_array)
+    def get_t_percent(self, any_t_array = None):
+        if any_t_array:
+            array_to_process = any_t_array
+        else:
+            array_to_process = self.t_array
+        t_max = np.amax(array_to_process)
+        t_min = np.amin(array_to_process)
 
         t_threshold = (t_max - t_min)*t_perc_rate + t_min
 
         t_in_range_cnt = 0
-        # for row in self.t_array:
-        #     for element in row:
-        #         if element > t_max:
-        for element in np.nditer(self.t_array):
+        for element in np.nditer(array_to_process):
             if element > t_max:
                 t_max = element
                 t_in_range_cnt += 1
@@ -51,8 +52,11 @@ class Pipeline():
                 t_in_range_cnt += 1
 
         t_perc_in_range = t_in_range_cnt / float(self.img_width*self.img_height)
-        self.t_percent = t_perc_in_range
-        return t_perc_in_range
+        if any_t_array:
+            return t_perc_in_range * 100
+            
+        self.t_percent = t_perc_in_range * 100
+        return self.t_percent
 
     def get_d_score(self):
         num_bad_elements = 0
@@ -66,13 +70,13 @@ class Pipeline():
         return score
 
     def get_reward(self, prev_t_percent, prev_d_score):
-        reward = self.t_percent*self.d_score
+        reward = self.t_percent / 100 * self.d_score
 
-        if self.t_percent <= min_t_percent:
+        if (self.t_percent / 100) <= min_t_percent:
             if prev_t_percent > self.t_percent:
                 # worst case of going out of range of the target
                 reward = min_reward
-        elif self.t_percent >= max_t_percent:
+        elif (self.t_percent / 100) >= max_t_percent:
             if prev_t_percent > self.t_percent:
                 # best case of coming close enough to the target to send coords
                 reward = max_reward
@@ -95,7 +99,7 @@ class Pipeline():
             else:
                 # Opposite dir not enough room, reroute through dir with greatest headroom
                 next_action = np.argmax(self.d_array)
-        
+
         return next_action
 
 if __name__ == "__main__":
