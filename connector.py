@@ -28,7 +28,7 @@ def on_connect(client, userdata, flags, rc):
  
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-    print(msg.topic+" "+str(msg.payload))
+    # print(msg.topic+" "+str(msg.payload))
 
     if msg.topic == observation_data_path:
         DATA_BUFFER.msg = msg.payload
@@ -59,7 +59,7 @@ class Connector():
         publish.single(request_path, "1", hostname=host_name)
         print(self.data_buffer.msg_flag)
         if self.data_buffer.msg_flag: # If buffer not empty, send it to data pipeline
-            print(f"Message Recieved\nConverting Buffer to Arrays...")
+            print("Message Recieved\nConverting Buffer to Arrays...")
             # Translate from raw data to buffer
             tick = time.time()
             t_array, d_array, lat, long = DATA_BUFFER.buffer_to_arrays()
@@ -83,6 +83,7 @@ class Connector():
                 strides=(2, 2), padding='valid')
         pre_t_array = avg_pool_2d(pre_t_array)
         pre_t_array = tf.reshape(pre_t_array, (12, 16))
+        pre_t_array = tf.clip_by_value(pre_t_array, clip_value_min=25, clip_value_max=40)
 
         # Round all values of t_array
         tf.round(pre_t_array)
