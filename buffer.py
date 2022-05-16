@@ -22,11 +22,11 @@ class Buffer():
 
     def buffer_to_arrays(self):
         temp = []
-        for element in str(self.msg).replace("'", "").replace("b", ""). replace("[", "").replace("]", "").split(", "):
-            temp.append(float(element))
-
-        # for element in str(self.msg).replace("'", "").replace("b", ""). replace("[", "").replace("]", "").replace("\n", "").split(" "):
+        # for element in str(self.msg).replace("'", "").replace("b", ""). replace("[", "").replace("]", "").split(", "):
         #     temp.append(float(element))
+
+        for element in str(self.msg).replace("'", "").replace("b", ""). replace("[", "").replace("]", "").replace("\n", "").replace("\\n", "").split():
+            temp.append(float(element))
 
         t_array = np.array(temp[self.dist_idx[1]:self.gps_idx[0]], dtype=np.float32).reshape(t_dim)
         d_array = np.array(temp[ self.dist_idx[0]:self.dist_idx[1] ], dtype=np.float32)
