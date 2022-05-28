@@ -13,10 +13,10 @@ def save_and_exit(qtable_file, eps_file, qtable_save, eps_save):
     eps_file.write(f'{eps_save}\n')
     qtable_file.close()
     eps_file.close()
-    sys.exit("Saved and Exited...")
+   sys.exit("Saved and Exited...")
 
 # Saved Qtable Params and epsilon
-initialized = False
+initialized = True
 q_filename = "q_table_5_16.csv"
 eps_filename = "q_epsilon_5_16.txt"
 epi_filename = "q_episode_5_16.txt"
@@ -37,9 +37,9 @@ state_size = env.observation_space_size*(values_max-values_min)*max_distance*num
 print("State size ", state_size)
 
 # Hyperparams
-total_episodes = 100        # Total episodes 50000
+total_episodes = 1        # Total episodes 50000
 total_test_episodes = 1     # Total test episodes 100
-max_steps = 99                # Max steps per episode 99
+max_steps = 149                # Max steps per episode 99
 
 learning_rate = 0.7           # Learning rate
 gamma = 0.618                 # Discounting rate
@@ -55,11 +55,13 @@ if initialized:
     f = open(q_filename, "r", encoding="utf-8")
     e = open(eps_filename, "r", encoding="utf-8")
     qtable = loadtxt(f, delimiter=',')
+    print("Loaded qtable from existing file...")
     for line in e.readlines():
         epsilon = float(line)
     f.close()
     e.close()
 else:
+    print("Creating new qtable...")
     qtable = np.zeros((state_size, action_size))
     epsilon = 1.0
 
@@ -73,10 +75,6 @@ try:
         obs = env.reset().observation
         step = 0
         done = False
-
-        # Save Qtable just in case...
-        savetxt(f, qtable, delimiter=',')
-        e.write(f'{epsilon}\n')
 
         for step in range(max_steps):
             # 3. Choose an action a in the current world state (s)
@@ -100,63 +98,30 @@ try:
             except KeyboardInterrupt:
                 save_and_exit(f, e, qtable, epsilon)
 
-            # Update Q(s,a):= Q(s,a) + lr [R(s,a) + gamma * max Q(s',a') - Q(s,a)]
             try:
                 qtable[obs, action] = qtable[obs, action] + learning_rate * (reward + gamma *
                                             np.max(qtable[info, :]) - qtable[obs, action])
             except IndexError:
                 save_and_exit(f, e, qtable, epsilon)
 
-            # Our new state is state
+            # Our new observation is the previous step's "info"
             obs = info
 
-            # If done : finish episode
+            # If hig reward (found target) finish episode
             if reward == 100:
                 break
+            if step == 148:
+                print("Ran out of Steps. Ending Episode...")
 
         # Reduce epsilon (because we need less and less exploration)
         epsilon = min_epsilon + (max_epsilon - min_epsilon)*np.exp(-decay_rate*episode)
-
-        # Save the num of episode for future reference
-        with open(epi_filename, "a", encoding="utf-8") as i:
-            for line in i.readlines():
-                prev_ep_num = int(line)
-                prev_ep_num += 1
-                i.write(f'{prev_ep_num}\n')
+        save_and_exit(f, e, qtable, epsilon)
 
 except SaveAndExitError:
     save_and_exit(f, e, qtable, epsilon)
 except KeyboardInterrupt:
     save_and_exit(f, e, qtable, epsilon)
 
+
+env.close()
 save_and_exit(f, e, qtable, epsilon)
-
-# # For Testing The Qtable
-# env.reset()
-# rewards = []
-
-# for episode in range(total_test_episodes):
-#     state = env.reset()
-#     step = 0
-#     done = False
-#     total_rewards = 0
-#     #print("****************************************************")
-#     #print("EPISODE ", episode)
-
-#     for step in range(max_steps):
-#         # UNCOMMENT IT IF YOU WANT TO SEE OUR AGENT PLAYING
-#         # env.render()
-#         # Take the action (index) that have the maximum expected future reward given that state
-#         action = np.argmax(qtable[state,:])
-
-#         new_state, reward, done, info = env.step(action)
-
-#         total_rewards += reward
-
-#         if done:
-#             rewards.append(total_rewards)
-#             #print ("Score", total_rewards)
-#             break
-#         state = new_state
-# env.close()
-# print ("Score over time: " +  str(sum(rewards)/total_test_episodes))
