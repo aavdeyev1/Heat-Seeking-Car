@@ -11,7 +11,7 @@ class Buffer():
 
     def __init__(self, dist_idx, gps_idx):
         self.msg = None
-        self.msg_flag = False
+        self.msg_ready_flag = False
         self.dist_idx = dist_idx
         self.gps_idx = gps_idx
         self.thermal = ""
