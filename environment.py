@@ -25,7 +25,7 @@ t_dim = (12, 16)
 reset_observation_vector = np.zeros((6,t_dim[0],t_dim[1]), dtype=np.int32)
 reset_observation_vector[:, 0, 0] = [500.0, 500.0, 500.0, 500.0, 0.1, 0]
 
-stop_percent = 25
+stop_percent = 20
 
 
 class RCCarEnv(py_environment.PyEnvironment):
@@ -96,17 +96,23 @@ class RCCarEnv(py_environment.PyEnvironment):
             while lat is None:
                 t_array, d_array, lat, long = self.conn.check_for_data()
                 time.sleep(1)   
+
+            
         else:
             raise ValueError('`action` should be 0 to 3.')
 
-        # Prevent the extra step after target finding.
-        if self._pl_hist.current_pl.get_t_percent(t_array) > stop_percent:
-            # End episode if target found, or T% is > stop precent
-            print("Target Found, ending episode...")
-            final_step = 4  # stop command
-            self.conn.send_turn(final_step)
-            # Send Stop command to car
-            self._episode_ended = True
+        if not self._episode_ended:
+            # Prevent the extra step after target finding.
+            current_percent = prev_pl.get_t_percent(t_array)
+            prev_percent = prev_pl.get_t_percent()
+            if current_percent > stop_percent or prev_percent > stop_percent:
+                # End episode if target found, or T% is > stop precent
+                print("Target Found, ending episode EARLY...")
+                final_step = 4  # stop command
+                self.conn.send_turn(final_step)
+                # Send Stop command to car
+                self._episode_ended = True
+
 
         if self._episode_ended or self._observation[4, 0, 0] > stop_percent:
             return ts.termination(reset_observation_vector, reward=100)
@@ -116,9 +122,9 @@ class RCCarEnv(py_environment.PyEnvironment):
             # Valid action returned guaranteed, carry out next turn
             self.conn.send_turn(next_action)
 
-            print(t_array)
+            # print(t_array)
             print(d_array)
-            print(f"Location: lat={lat}, long={long}")
+            print(f"Location: lat={lat}, long={long}, action {next_action}")
 
             # TODO - remove;
             # Convert to usable arrays NUMPY arrs
