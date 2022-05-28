@@ -39,7 +39,7 @@ def on_message(client, userdata, msg):
 
     elif msg.topic == "HeatSeekingCar/Observation_Vector":
         DATA_BUFFER.msg = msg.payload
-        DATA_BUFFER.msg_flag = True
+        DATA_BUFFER.msg_ready_flag = True
 
 # mock_lat = 11.99999999999
 # mock_long = 10.99999999999
@@ -81,8 +81,8 @@ while time.time() < t_end:
     time.sleep(1)
     publish.single("HeatSeekingCar/Request", "1", hostname="test.mosquitto.org")
 
-    print(DATA_BUFFER.msg_flag)
-    if DATA_BUFFER.msg_flag: # If buffer not empty, send it to data pipeline
+    print(DATA_BUFFER.msg_ready_flag)
+    if DATA_BUFFER.msg_ready_flag: # If buffer not empty, send it to data pipeline
         print(f"Message Recieved\nConverting Buffer to Arrays...")
         # # Translate from raw data to buffer
         # tick = time.time()
@@ -116,7 +116,7 @@ while time.time() < t_end:
         # Transmit Next Turn
         print("Transmitting Next Turn to RC car...")
         publish.single("HeatSeekingCar/Direction", mock_turn, hostname="test.mosquitto.org")
-        DATA_BUFFER.msg_flag = False
+        DATA_BUFFER.msg_ready_flag = False
 
 # A second stop loop will be if the target reached, or num_turns is at max
 client.loop_stop()
