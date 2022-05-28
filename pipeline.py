@@ -1,14 +1,12 @@
 
 import numpy as np
-import helper_funcs as hf
 import math
-import enum
 
 t_perc_rate = .50
 min_reward = -100
 max_reward = 100
-min_t_percent = .1
-max_t_percent = .85
+min_t_percent = 0.0
+max_t_percent = .2
 min_d = 20
 
 dir_names = ["fwd", "right", "bwd", "lft"]
@@ -34,7 +32,7 @@ class Pipeline():
         return f"Pipeline: \n> distance:{self.d_array}, thermal size: {self.t_array.shape}\n"
 
     def get_t_percent(self, any_t_array = None):
-        if any_t_array:
+        if any_t_array is not None:
             array_to_process = any_t_array
         else:
             array_to_process = self.t_array
@@ -52,7 +50,7 @@ class Pipeline():
                 t_in_range_cnt += 1
 
         t_perc_in_range = t_in_range_cnt / float(self.img_width*self.img_height)
-        if any_t_array:
+        if any_t_array is not None:
             return t_perc_in_range * 100
             
         self.t_percent = t_perc_in_range * 100
@@ -70,9 +68,9 @@ class Pipeline():
         return score
 
     def get_reward(self, prev_t_percent, prev_d_score):
-        reward = self.t_percent / 100 * self.d_score
+        reward = (self.t_percent + .001) / 100 * self.d_score 
 
-        if (self.t_percent / 100) <= min_t_percent:
+        if (self.t_percent / 100) < min_t_percent:
             if prev_t_percent > self.t_percent:
                 # worst case of going out of range of the target
                 reward = min_reward
