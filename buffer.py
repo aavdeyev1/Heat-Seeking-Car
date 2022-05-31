@@ -14,12 +14,10 @@ class Buffer():
         self.msg_ready_flag = False
         self.dist_idx = dist_idx
         self.gps_idx = gps_idx
-        self.thermal = ""
-        self.distance = ""
         self.undervoltage_flag = False
 
     def __str__(self):
-        return f"Thermal: {self.msg}, Dist: {self.distance}"
+        return f"Message: {self.msg}"
 
     def buffer_to_arrays(self):
         temp = []

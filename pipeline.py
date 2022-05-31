@@ -22,8 +22,6 @@ class Pipeline():
         self.img_height = height
         self.t_array = t_array
         self.d_array = d_array
-        self.gps_lat = None
-        self.gps_long = None
         self.t_percent = self.get_t_percent()
         self.d_score = self.get_d_score()
         self.reward = self.get_reward(prev_t_percent, prev_d_score)

@@ -41,9 +41,6 @@ class RCCarEnv(py_environment.PyEnvironment):
         self._observation = reset_observation_vector
 
         self._timout_after = time.time() + 60 * TIMOUT_MINS
-
-        # current % of thermal view
-        self._state = self._observation[4, 0, 0]
         self._episode_ended = False
         self._pl_hist = PipelineHistorian()
 
