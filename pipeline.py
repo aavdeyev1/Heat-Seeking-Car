@@ -17,7 +17,7 @@ opposite_enum = {"fwd": 2,
 
 class Pipeline():
     """Pipeline object for processing data from RC car."""
-    def __init__(self, t_array, d_array, width=32, height=24, prev_t_percent=0, prev_d_score=0):
+    def __init__(self, t_array, d_array, lat, long, width=32, height=24, prev_t_percent=0, prev_d_score=0):
         self.img_width = width
         self.img_height = height
         self.t_array = t_array
@@ -25,6 +25,8 @@ class Pipeline():
         self.t_percent = self.get_t_percent()
         self.d_score = self.get_d_score()
         self.reward = self.get_reward(prev_t_percent, prev_d_score)
+        self.lat = lat
+        self.long = long
 
     def __str__(self):
         return f"Pipeline: \n> distance:{self.d_array}, thermal size: {self.t_array.shape}\n"

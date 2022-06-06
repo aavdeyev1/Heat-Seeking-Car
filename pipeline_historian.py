@@ -6,7 +6,7 @@ import numpy as np
 
 d_array = np.array([500.0, 500.0, 500.0, 500.0], dtype=np.float32)
 t_array = np.zeros((24, 32))
-reset_pipeline = Pipeline(t_array=t_array, d_array=d_array)
+reset_pipeline = Pipeline(t_array=t_array, d_array=d_array, lat=0, long=0)
 
 class PipelineHistorian():
 

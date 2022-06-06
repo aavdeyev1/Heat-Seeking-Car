@@ -18,6 +18,8 @@ from tf_agents.environments import utils
 from tf_agents.specs import array_spec
 from tf_agents.trajectories import time_step as ts
 
+from errors import SaveAndExitError
+
 TIMOUT_MINS = 15
 # t_dim = (24, 32)
 t_dim = (12, 16)
@@ -47,6 +49,8 @@ class RCCarEnv(py_environment.PyEnvironment):
         self._observation_space_size = t_dim[0]*t_dim[1]*(self._action_spec.maximum + 1)
 
         self.conn = Connector()
+        self.lat = 0
+        self.long = 0
 
     @property
     def observation_space_size(self):
@@ -92,11 +96,15 @@ class RCCarEnv(py_environment.PyEnvironment):
             # # busy wait til next Buffer comes in
             while lat is None:
                 t_array, d_array, lat, long = self.conn.check_for_data()
+                self.lat = lat
+                self.long = long
                 time.sleep(1)   
 
             
         else:
-            raise ValueError('`action` should be 0 to 3.')
+            # raise ValueError('`action` should be 0 to 3.')
+            print('ValueError: `action` should be 0 to 3.')
+            raise SaveAndExitError
 
         if not self._episode_ended:
             # Prevent the extra step after target finding.
@@ -112,6 +120,7 @@ class RCCarEnv(py_environment.PyEnvironment):
 
 
         if self._episode_ended or self._observation[4, 0, 0] > stop_percent:
+            print(f"\nLocation: ({self.lat}, {self.long})")
             return ts.termination(reset_observation_vector, reward=100)
         else:
             # Check if fatal action
@@ -120,8 +129,8 @@ class RCCarEnv(py_environment.PyEnvironment):
             self.conn.send_turn(next_action)
 
             # print(t_array)
-            print(d_array)
-            print(f"Location: lat={lat}, long={long}, action {next_action}")
+            # print(d_array)
+            # print(f"Location: lat={lat}, long={long}, action {next_action}")
 
             # TODO - remove;
             # Convert to usable arrays NUMPY arrs
@@ -131,7 +140,7 @@ class RCCarEnv(py_environment.PyEnvironment):
 
             # Generate pipeline for next step
             new_pipeline = Pipeline(t_array, d_array, prev_t_percent=self._observation[4, 0, 0],
-            prev_d_score=prev_d_score, width=t_dim[1], height=t_dim[0])
+            prev_d_score=prev_d_score, lat=lat, long=long, width=t_dim[1], height=t_dim[0])
 
             # TODO - remove
             # new_pipeline.t_percent = self._observation[4, 0, 0]+.2
@@ -144,7 +153,7 @@ class RCCarEnv(py_environment.PyEnvironment):
             new_observation_vector[4, 0, 0] = new_pipeline.t_percent
             new_observation_vector[5] = new_pipeline.t_array
             self._observation = new_observation_vector
-            print(self._observation)
+            # print(self._observation)
 
             return ts.transition(
                 np.array(new_observation_vector, dtype=np.int32),
