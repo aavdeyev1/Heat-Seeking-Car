@@ -67,17 +67,8 @@ try:
 
     for step in range(max_steps):
         # 3. Choose an action a in the current world state (s)
-        ## First we randomize a number
-        exp_exp_tradeoff = random.uniform(0,1)
-
-        ## If this number > greater than epsilon --> exploitation
-        # (taking the biggest Q value for this state)
-        if exp_exp_tradeoff > epsilon:
-            action = np.argmax(qtable[obs,:])
-
-        # Else doing a random choice --> exploration
-        else:
-            action = random.randrange(4)
+        # doing a random choice --> exploration
+        action = random.randrange(4)
 
         try:
             # Take the action (a) and observe the outcome state(s') and reward (r)
