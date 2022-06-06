@@ -1,5 +1,6 @@
 # Heat-Seeking Car Reinforcement Learning Algorithm
-### EENG Senior Capstone Project for Eastern Washington University
+## EENG Senior Capstone Project for Eastern Washington University
+
 This is the repo for the reinforcement learning algorithm for our Heat-Seeking Car.
 The Qtable is in Google Drive under the following link:
 
@@ -19,3 +20,12 @@ Special thanks to Thomas Simonini's tutorial which I followed for the test/train
 And the Tensorflow Tutorial which I followed to create the tensorflow environment:
 
 [Introduction to RL and Deep Q Networks](https://www.tensorflow.org/agents/tutorials/0_intro_rl)
+
+
+### Project Members:
+Mattias Tyni: Raspberry Pi code, sensors
+
+Amelya Avdeyev: RL Algorithm
+
+Artyom Gurdyumov: Motors and RC assembly
+### Questions about this code? Contact me at aavdeyev1@ewu.edu
