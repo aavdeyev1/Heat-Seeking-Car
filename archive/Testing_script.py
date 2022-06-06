@@ -1,5 +1,5 @@
 import numpy as np
-import helper_funcs as hf
+import archive.helper_funcs as hf
 
 # init test arrays, 2D right now
 test_t = np.array( [[27.0, 27.0, 27.0, 27.0],

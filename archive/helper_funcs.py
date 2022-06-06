@@ -90,3 +90,13 @@ def plot_value_array(i, predictions_array, true_label):
 def send_action(action):
   """Send action to rc car."""
   print(f"Send action to car: Go {action_names[action]}")
+
+
+if __name__ == "__main__":
+  obs = 2
+  qtable = np.array([[27.0, 27.0, 31.0, 32.0],
+                        [27.0, 33.0, 32.0, 32.0],
+                        [27.0, 27.0, 33.0, 32.0],
+                        [33.0, 27.0, 31.0, 31.0]])
+  action = np.argmax(qtable[obs,:])
+  print(action)

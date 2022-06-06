@@ -5,7 +5,7 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 
-import helper_funcs as hf
+import archive.helper_funcs as hf
 
 print(tf.__version__)
 
