@@ -88,6 +88,9 @@ try:
         # If num steps is too big, end episode
         if step == max_steps - 1:
             print("Ran out of Steps. Ending Episode...")
+            
+        # Reduce epsilon EVERY STEP (because we need less and less exploration)
+        epsilon = min_epsilon + (max_epsilon - min_epsilon)*np.exp(-decay_rate*step)
 except SaveAndExitError:
     save_and_exit(f, qtable)
 except KeyboardInterrupt:
